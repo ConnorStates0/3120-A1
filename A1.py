@@ -74,6 +74,10 @@ class ParseTree:
                 print('--------'+"_".join(grandkid.elem))
                 for greatgrandkid in grandkid.children:
                     print('------------'+"_".join(greatgrandkid.elem))
+                    for greatgreatgrandkid in greatgrandkid.children:
+                        print('----------------'+"_".join(greatgreatgrandkid.elem))
+                        for greatgreatgrandkid2 in greatgreatgrandkid.children:
+                           print('--------------------'+"_".join(greatgreatgrandkid2.elem))
 
 
 
@@ -243,7 +247,10 @@ def build_parse_tree_rec(tokens: List[str], node: Optional[Node] = None) -> Node
                 new_node1 = Node(tokens[i])
                 new_node2 = Node(tokens[j-1])
                 new_node.add_child_node(new_node1)
-                build_parse_tree_rec(tokens[i+1:j-1], new_node)
+                if len(tokens[i+1:j-1]) > 1:
+                    new_node.add_child_node(build_parse_tree_rec(tokens[i+1:j-1]))
+                else:
+                    build_parse_tree_rec(tokens[i+1:j-1], new_node)
                 new_node.add_child_node(new_node2)
                 root.add_child_node(new_node)
                 
