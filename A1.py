@@ -65,7 +65,7 @@ class ParseTree:
 
     def print_tree(self, node: Optional[Node] = None, level: int = 0) -> None:
         # TODO
-        print("") # ---- per level
+        print("")
         print('_'.join(self.root.elem))
         children = self.root.children
         for child in children:
@@ -101,17 +101,19 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
         return False
     else:
         finalStrList = []
-        i = 0
+        j = 0
         dotCount = 0
         openBrackets = []
         closedBrackets = []
         for i in range(len(s)):
             if s[i] in var_chars:
-                j = i
+                if j == 0:
+                    j = i
                 if i < len(s)-1:
                     if s[i+1] not in var_chars:
                         if is_valid_var_name(s[j:i+1]):
                             finalStrList.append(s[j:i+1])
+                            j = 0
                         else:
                             print("invalid variable name at index "+str(i))
                             return False
@@ -127,14 +129,17 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
                             print('Invalid Character '+s[j]+' encountered at index '+str(j))
                             return False 
             elif s[i] == '\\':
-                if s[i+1] in alphabet_chars:
-                    finalStrList.append('\\')
-                elif s[i+1] == ' ':
-                    print('Invalid space inserted after \\ at index '+str(i))
-                    return False
+                if i == len(s)-1:
+                    print('Missing complete lambda expression starting at index '+str(i))
                 else:
-                    print('Backslashes not followed by a variable name at '+str(i))
-                    return False
+                    if s[i+1] in alphabet_chars:
+                        finalStrList.append('\\')
+                    elif s[i+1] == ' ':
+                        print('Invalid space inserted after \\ at index '+str(i))
+                        return False
+                    else:
+                        print('Backslashes not followed by a variable name at '+str(i))
+                        return False
             elif s[i] == '.':
                 if s[i-1] in alphabet_chars:
                     count = 1
@@ -282,8 +287,8 @@ if __name__ == "__main__":
     read_lines_from_txt_check_validity(valid_examples_fp)
     read_lines_from_txt_output_parse_tree(valid_examples_fp)
 
-    print("Checking invalid examples...")
-    #read_lines_from_txt_check_validity(invalid_examples_fp)
+    print("\nChecking invalid examples...")
+    read_lines_from_txt_check_validity(invalid_examples_fp)
 
     # Optional
     #print("\n\nAssociation Examples:")
