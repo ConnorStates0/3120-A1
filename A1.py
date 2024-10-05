@@ -65,19 +65,15 @@ class ParseTree:
 
     def print_tree(self, node: Optional[Node] = None, level: int = 0) -> None:
         # TODO
-        print("")
-        print('_'.join(self.root.elem))
-        children = self.root.children
-        for child in children:
-            print('----'+"_".join(child.elem))
-            for grandkid in child.children:
-                print('--------'+"_".join(grandkid.elem))
-                for greatgrandkid in grandkid.children:
-                    print('------------'+"_".join(greatgrandkid.elem))
-                    for greatgreatgrandkid in greatgrandkid.children:
-                        print('----------------'+"_".join(greatgreatgrandkid.elem))
-                        for greatgreatgrandkid2 in greatgreatgrandkid.children:
-                           print('--------------------'+"_".join(greatgreatgrandkid2.elem))
+        if node == None:
+            node = self.root
+            level = 1
+        spacing = ''
+        for i in range(level):
+            spacing = spacing + '----' 
+        print(spacing + '_'.join(node.elem))
+        for child in node.children:
+            self.print_tree(child, level + 1)
 
 
 
@@ -115,18 +111,26 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
                             finalStrList.append(s[j:i+1])
                             j = None
                         else:
-                            print("invalid variable name at index "+str(i))
-                            return False
+                            if s[j].isdigit():
+                                print("Error at index "+str(j)+", variables cannot begin with digits.")
+                                return False
+                            else:
+                                print("invalid variable name at index "+str(i))
+                                return False
                 else:
                     if is_valid_var_name(s[j:]):
                             finalStrList.append(s[j:])
                     else:
-                        print("invalid variable name at index " + str(i))
-                        return False
+                        if s[j].isdigit():
+                            print("Error at index "+str(j)+", variables cannot begin with digits.")
+                            return False
+                        else:
+                            print("invalid variable name at index "+str(i))
+                            return False
             elif s[i] == ' ':
                 i = i + 1
             elif s[i] not in all_valid_chars:
-                            print('Invalid Character '+s[i]+' encountered at index '+str(j))
+                            print('Error at index '+str(j)+' with invalid character '+s[i])
                             return False 
             elif s[i] == '\\':
                 if i == len(s)-1:
@@ -134,21 +138,29 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
                     return False
                 else:
                     nextSpace = s.find(' ', i)
-                    nextParen = s.find(' ', i)
-                    if nextSpace < nextParen or nextParen < nextSpace:
-                        if s[i+1] in alphabet_chars:
-                            if i+2 == len(s):
-                                print('Invalid lambda expression at '+ str(i))
-                                return False
-                    elif nextSpace == -1 and nextParen == -1:
-                        print('Missing complete lambda expression starting at index '+str(i))
-                        return False
-                    elif s[i+1] == '(' or s[i+1] == '.':
+                    nextParen = s.find('(', i)
+                    if s[i+1] == '(' or s[i+1] == '.':
                             print('Backlashes not followed by a variable name at '+str(i))
                             return False
                     elif s[i+1] == ' ':
                         print('Invalid space inserted after \\ at index '+str(i))
                         return False
+                    elif s[i+1] == '\\':
+                        continue
+                    elif nextSpace < nextParen or nextParen < nextSpace:
+                        if s[i+1] in alphabet_chars:
+                            if i+2 == len(s):
+                                print('Invalid lambda expression at '+ str(i))
+                                return False
+                    elif nextSpace == -1 and nextParen == -1:
+                        if s[i+1].isalpha():
+                            if i+1 == len(s)-1:
+                                print('Invalid lambda expression at '+str(i))
+                                return False
+                        else:
+                            print('Missing complete lambda expression starting at index '+str(i))
+                            return False
+                    
                     else:
                         finalStrList.append('\\')
             elif s[i] == '.':
@@ -162,8 +174,11 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
                     else:
                         print('Invalid Character following dot at index '+str(i))
                         return False
+                elif i == 0:
+                    print("Encountered dot at invalid index 0.")
+                    return False
                 else:
-                    print("Must have a variable name before character '.' at index "+str(i))
+                    print("Must have a variable name before character '.' at index "+str(i-1))
                     return False
             elif s[i] == '(':
                 if i+1 == len(s):
@@ -173,12 +188,19 @@ def parse_tokens(s_: str, association_type: Optional[str] = None) -> Union[List[
                     if s[i+1] == ')':
                         print("Missing expression for parenthesis at "+str(i))
                         return False
+                    elif s.find(')') == -1:
+                        print("Bracket ( at index: "+str(i)+" not matched with a closing bracket ')'")
+                        return False
                     else:
                         finalStrList.append('(')
                         openBrackets.append(i)
             elif s[i] == ')':
-                finalStrList.append(')')
-                closedBrackets.append(i)
+                if i == 0:
+                    print("Bracket ) at index: "+str(0)+" not matched with a opening bracket '('")
+                    return False
+                else:
+                    finalStrList.append(')')
+                    closedBrackets.append(i)
         if len(openBrackets) < len(closedBrackets):
             print("Bracket ) at index: "+str(closedBrackets[-1])+" not matched with a opening bracket '('")
             return False
